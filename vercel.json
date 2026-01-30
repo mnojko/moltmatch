@@ -9,8 +9,7 @@
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase-anon-key",
     "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key",
     "MOLTBOOK_API_KEY": "@moltbook-api-key",
-    "NEXTAUTH_SECRET": "@nextauth-secret",
-    "NEXTAUTH_URL": "@nextauth-url",
+    "JWT_SECRET": "@jwt-secret",
     "NEXT_PUBLIC_APP_URL": "@app-url"
   },
   "headers": [

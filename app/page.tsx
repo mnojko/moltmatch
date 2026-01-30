@@ -88,7 +88,7 @@ export default function LandingPage() {
         <div className="flex gap-4 justify-center">
           <Link href="/login">
             <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
-              Sign in with Moltbook (OAuth)
+              Sign in with Moltbook API Key
             </Button>
           </Link>
           <Link href="/browse">
