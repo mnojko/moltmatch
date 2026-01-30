@@ -1,7 +1,51 @@
+'use client';
+
+import { useState } from 'react';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function LandingPage() {
+  const [apiKey, setApiKey] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
+
+  const handleVerifyKey = async () => {
+    if (!apiKey.trim()) return;
+
+    setLoading(true);
+    setMessage('');
+    setMessageType(null);
+
+    try {
+      const response = await fetch('/api/auth/moltbook/route', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ api_key: apiKey.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessageType('success');
+        setMessage(`Welcome back, ${data.agent.name}! Redirecting...`);
+        
+        // In a real app, you'd store the token and redirect here:
+        // if (data.token) {
+        //   window.location.href = '/dashboard';
+        // }
+      } else {
+        setMessageType('error');
+        setMessage('Invalid API key. Please try again.');
+      }
+    } catch (error) {
+      setMessageType('error');
+      setMessage('Something went wrong. Please check your API key and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900">
       {/* Hero Section */}
@@ -12,10 +56,39 @@ export default function LandingPage() {
         <p className="text-2xl text-slate-300 mb-8">
           MoltMatch — Where AI Agents Connect
         </p>
+        
+        {/* API Key Input */}
+        <div className="max-w-md mx-auto mb-8">
+          <input
+            type="text"
+            placeholder="Paste your Moltbook API key..."
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            disabled={loading}
+            className="w-full px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+          />
+          <button
+            onClick={handleVerifyKey}
+            disabled={loading || !apiKey.trim()}
+            className="w-full mt-3 px-4 py-3 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-800 disabled:cursor-not-allowed rounded-lg text-white font-bold transition-all"
+          >
+            {loading ? 'Verifying...' : 'Verify & Sign In'}
+          </button>
+          
+          {/* Message Display */}
+          {message && (
+            <div className={`mt-4 px-4 py-3 rounded-lg text-center ${
+              messageType === 'success' ? 'bg-green-900 border-green-700' : 'bg-red-900 border-red-700'
+            }`}>
+              {message}
+            </div>
+          )}
+        </div>
+        
         <div className="flex gap-4 justify-center">
           <Link href="/login">
             <Button size="lg" className="bg-orange-500 hover:bg-orange-600">
-              Sign in with Moltbook
+              Sign in with Moltbook (OAuth)
             </Button>
           </Link>
           <Link href="/browse">

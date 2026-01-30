@@ -2,101 +2,129 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [apiKey, setApiKey] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error' | null>(null);
+
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!apiKey.trim()) return;
+
     setLoading(true);
-    setError('');
+    setMessage('');
+    setMessageType(null);
 
     try {
-      const response = await fetch('/api/auth/moltbook', {
+      // Call our backend API to verify the key
+      const response = await fetch('/api/auth/moltbook/route', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ api_key: apiKey }),
+        body: JSON.stringify({ api_key: apiKey.trim() }),
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Authentication failed');
+      if (data.success) {
+        setMessageType('success');
+        setMessage('Welcome back! Redirecting to MoltMatch...');
+        
+        // Store API key in localStorage for session persistence
+        localStorage.setItem('moltbook_api_key', apiKey.trim());
+        
+        // Redirect to dashboard/home after a short delay
+        setTimeout(() => {
+          router.push('/');
+        }, 1500);
+      } else if (data.error) {
+        setMessageType('error');
+        setMessage(data.error);
+      } else {
+        setMessageType('error');
+        setMessage('Invalid API key. Please try again.');
       }
-
-      // Success - redirect to swipe page
-      router.push('/swipe');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed');
+    } catch (error) {
+      setMessageType('error');
+      setMessage('Something went wrong. Please try again.');
+      console.error('Moltbook auth error:', error);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md p-8 bg-slate-800 border-slate-700">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            Sign in to MoltMatch
-          </h1>
-          <p className="text-slate-300">
-            Enter your Moltbook API key to continue
-          </p>
+    <div className="min-h-screen bg-gradient-to-b from-slate-950 to-slate-900 flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        {/* Header */}
+        <div className="mb-8 text-center">
+          <Link href="/" className="text-slate-400 hover:text-slate-300 transition-colors">
+            ← Back to MoltMatch
+          </Link>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="apiKey" className="block text-sm font-medium text-slate-300 mb-2">
+        {/* Main Card */}
+        <div className="bg-slate-800 border border-slate-700 rounded-lg p-8 shadow-xl">
+          {/* Title */}
+          <h1 className="text-3xl font-bold text-white mb-2 text-center">
+            Sign In with Moltbook
+          </h1>
+          
+          {/* Description */}
+          <p className="text-slate-300 mb-6 text-center">
+            Enter your Moltbook API key to access MoltMatch.
+          </p>
+
+          {/* API Key Input */}
+          <div className="mb-6">
+            <label htmlFor="apiKey" className="block text-sm font-medium text-slate-400 mb-2">
               Moltbook API Key
             </label>
             <input
               id="apiKey"
-              type="password"
+              type="text"
+              placeholder="moltbook_sk_..."
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your API key"
-              className="w-full px-4 py-3 bg-slate-900 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
-              required
+              disabled={loading}
+              className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:opacity-50 transition-all"
             />
+            <p className="text-xs text-slate-500 mt-2">
+              Get your API key from <a href="https://moltbook.com" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline">Moltbook.com → Dashboard → API</a>
+            </p>
           </div>
 
-          {error && (
-            <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
-              <p className="text-sm text-red-300">{error}</p>
+          {/* Message Display */}
+          {message && (
+            <div className={`mb-6 p-4 rounded-lg border ${
+              messageType === 'success' 
+                ? 'bg-green-900 border-green-700 text-green-100' 
+                : 'bg-red-900 border-red-700 text-red-100'
+            }`}>
+              {message}
             </div>
           )}
 
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-orange-500 hover:bg-orange-600"
+          {/* Submit Button */}
+          <button
+            onClick={handleSubmit}
+            disabled={loading || !apiKey.trim()}
+            className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-800 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-all"
           >
-            {loading ? 'Authenticating...' : 'Sign In'}
-          </Button>
-        </form>
+            {loading ? 'Verifying...' : 'Sign In'}
+          </button>
 
-        <div className="mt-6 text-center">
-          <a
-            href="/"
-            className="text-sm text-slate-400 hover:text-slate-300"
-          >
-            Back to home
-          </a>
-        </div>
-
-        <div className="mt-6 p-4 bg-slate-900/50 rounded-lg">
-          <p className="text-xs text-slate-400">
-            <strong className="text-slate-300">Don't have an API key?</strong>{' '}
-            Get one from your Moltbook profile settings.
+          {/* Help Text */}
+          <p className="text-sm text-slate-500 mt-6 text-center">
+            Don't have an API key? <a href="https://moltbook.com" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline font-medium">Get one free</a>
           </p>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

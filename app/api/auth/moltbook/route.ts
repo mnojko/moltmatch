@@ -1,54 +1,92 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { verifyMoltbookAgent } from '@/lib/moltbook/auth';
-import { createAgentJWT } from '@/lib/auth/jwt';
-import { getOrCreateAgent } from '@/lib/db/agents';
-import { setSession } from '@/lib/auth/session';
-import { AuthResponse } from '@/types/api';
+import { NextResponse } from 'next/server';
 
-export async function POST(request: NextRequest) {
+interface MoltbookAgent {
+  id: string;
+  name: string;
+  avatar_url?: string;
+  bio?: string;
+  tags?: string[];
+  karma?: number;
+  posts_count?: number;
+  moltbook_id?: string;
+  is_claimed: boolean;
+}
+
+interface MoltbookApiResponse {
+  success: boolean;
+  error?: string;
+  data?: {
+    valid: boolean;
+    agent?: MoltbookAgent;
+  };
+}
+
+export async function POST(request: Request) {
   try {
-    const { api_key } = await request.json();
+    const body = await request.json();
+    const { api_key } = body;
 
-    if (!api_key) {
+    if (!api_key || typeof api_key !== 'string') {
       return NextResponse.json(
-        { error: 'API key is required' },
+        { success: false, error: 'API key is required' },
         { status: 400 }
       );
     }
 
-    // Verify API key with Moltbook
-    const moltbookAgent = await verifyMoltbookAgent(api_key);
+    // Verify with Moltbook API
+    const moltbookResponse = await fetch('https://www.moltbook.com/api/v1/agents/me', {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${api_key}`,
+      },
+    });
 
-    if (!moltbookAgent) {
+    if (!moltbookResponse.ok) {
+      const errorText = await moltbookResponse.text();
       return NextResponse.json(
-        { error: 'Invalid Moltbook API key' },
+        { 
+          success: false, 
+          error: 'Invalid Moltbook API key. Please check your key and try again.' 
+        },
         { status: 401 }
       );
     }
 
-    // Get or create agent in our database
-    const agent = await getOrCreateAgent(moltbookAgent);
+    const data = await moltbookResponse.json() as MoltbookApiResponse;
 
-    // Create JWT token
-    const token = await createAgentJWT(agent);
+    if (!data.valid || !data.agent) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'API key is valid, but no agent found. Please make sure your account is active.' 
+        },
+        { status: 404 }
+      );
+    }
 
-    // Set session cookie
-    await setSession(token);
+    if (!data.agent.is_claimed) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'Your Moltbook account must be claimed on Moltbook.com before you can use MoltMatch.' 
+        },
+        { status: 403 }
+      );
+    }
 
-    const response: AuthResponse = {
-      agent: {
-        id: agent.id,
-        name: agent.name,
-        avatar_url: agent.avatar_url,
-      },
-      token,
-    };
+    // Success - return agent data
+    return NextResponse.json({
+      success: true,
+      agent: data.agent
+    });
 
-    return NextResponse.json(response);
   } catch (error) {
-    console.error('Auth error:', error);
+    console.error('Moltbook API error:', error);
     return NextResponse.json(
-      { error: 'Authentication failed' },
+      { 
+        success: false, 
+        error: 'Something went wrong. Please try again.' 
+      },
       { status: 500 }
     );
   }
