@@ -8,16 +8,32 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Apply updated_at trigger to agents
-CREATE TRIGGER update_agents_updated_at
-  BEFORE UPDATE ON agents
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'update_agents_updated_at'
+  ) THEN
+    CREATE TRIGGER update_agents_updated_at
+      BEFORE UPDATE ON agents
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END $$;
 
 -- Apply updated_at trigger to agent_activity
-CREATE TRIGGER update_agent_activity_updated_at
-  BEFORE UPDATE ON agent_activity
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'update_agent_activity_updated_at'
+  ) THEN
+    CREATE TRIGGER update_agent_activity_updated_at
+      BEFORE UPDATE ON agent_activity
+      FOR EACH ROW
+      EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END $$;
 
 -- Function to update agent online status
 CREATE OR REPLACE FUNCTION update_agent_online_status()
@@ -35,10 +51,18 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger on agents insert/update to sync activity
-CREATE TRIGGER sync_agent_activity
-  AFTER INSERT OR UPDATE ON agents
-  FOR EACH ROW
-  EXECUTE FUNCTION update_agent_online_status();
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'sync_agent_activity'
+  ) THEN
+    CREATE TRIGGER sync_agent_activity
+      AFTER INSERT OR UPDATE ON agents
+      FOR EACH ROW
+      EXECUTE FUNCTION update_agent_online_status();
+  END IF;
+END $$;
 
 -- Function to mark agents offline after inactivity
 CREATE OR REPLACE FUNCTION mark_offline_agents()
@@ -90,10 +114,18 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger to auto-create matches
-CREATE TRIGGER check_mutual_match
-  AFTER INSERT ON swipes
-  FOR EACH ROW
-  EXECUTE FUNCTION check_for_match();
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'check_mutual_match'
+  ) THEN
+    CREATE TRIGGER check_mutual_match
+      AFTER INSERT ON swipes
+      FOR EACH ROW
+      EXECUTE FUNCTION check_for_match();
+  END IF;
+END $$;
 
 -- Function to update match's last_message_at
 CREATE OR REPLACE FUNCTION update_match_timestamp()
@@ -107,13 +139,59 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger on message insert to update match timestamp
-CREATE TRIGGER update_match_last_message
-  AFTER INSERT ON messages
-  FOR EACH ROW
-  EXECUTE FUNCTION update_match_timestamp();
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger
+    WHERE tgname = 'update_match_last_message'
+  ) THEN
+    CREATE TRIGGER update_match_last_message
+      AFTER INSERT ON messages
+      FOR EACH ROW
+      EXECUTE FUNCTION update_match_timestamp();
+  END IF;
+END $$;
 
--- Enable Realtime on tables
-ALTER PUBLICATION supabase_realtime ADD TABLE swipes;
-ALTER PUBLICATION supabase_realtime ADD TABLE matches;
-ALTER PUBLICATION supabase_realtime ADD TABLE messages;
-ALTER PUBLICATION supabase_realtime ADD TABLE agent_activity;
+-- Enable Realtime on tables (idempotent)
+DO $$
+BEGIN
+  -- Add swipes to realtime if not already added
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+    AND schemaname = 'public'
+    AND tablename = 'swipes'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE swipes;
+  END IF;
+
+  -- Add matches to realtime if not already added
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+    AND schemaname = 'public'
+    AND tablename = 'matches'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE matches;
+  END IF;
+
+  -- Add messages to realtime if not already added
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+    AND schemaname = 'public'
+    AND tablename = 'messages'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE messages;
+  END IF;
+
+  -- Add agent_activity to realtime if not already added
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_publication_tables
+    WHERE pubname = 'supabase_realtime'
+    AND schemaname = 'public'
+    AND tablename = 'agent_activity'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE agent_activity;
+  END IF;
+END $$;

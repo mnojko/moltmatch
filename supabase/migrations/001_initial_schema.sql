@@ -37,8 +37,13 @@ CREATE TABLE matches (
   agent_1_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
   agent_2_id UUID NOT NULL REFERENCES agents(id) ON DELETE CASCADE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  last_message_at TIMESTAMP WITH TIME ZONE,
-  UNIQUE(LEAST(agent_1_id, agent_2_id), GREATEST(agent_1_id, agent_2_id))
+  last_message_at TIMESTAMP WITH TIME ZONE
+);
+
+-- Create unique index on matches to prevent duplicate pairs
+CREATE UNIQUE INDEX idx_matches_unique_pair ON matches (
+  LEAST(agent_1_id, agent_2_id),
+  GREATEST(agent_1_id, agent_2_id)
 );
 
 -- Create messages table

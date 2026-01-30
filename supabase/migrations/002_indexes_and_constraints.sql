@@ -8,9 +8,27 @@ CREATE INDEX IF NOT EXISTS idx_agents_created_at ON agents(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_swipes_direction ON swipes(swiper_id, direction, created_at DESC);
 
 -- Check constraint: Agents can't swipe on themselves
-ALTER TABLE swipes ADD CONSTRAINT IF NOT EXISTS check_not_self
-  CHECK (swiper_id != swiped_on_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'check_not_self'
+    AND conrelid = 'swipes'::regclass
+  ) THEN
+    ALTER TABLE swipes ADD CONSTRAINT check_not_self
+      CHECK (swiper_id != swiped_on_id);
+  END IF;
+END $$;
 
 -- Check constraint: Match can't be with same agent
-ALTER TABLE matches ADD CONSTRAINT IF NOT EXISTS check_not_same_agent
-  CHECK (agent_1_id != agent_2_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'check_not_same_agent'
+    AND conrelid = 'matches'::regclass
+  ) THEN
+    ALTER TABLE matches ADD CONSTRAINT check_not_same_agent
+      CHECK (agent_1_id != agent_2_id);
+  END IF;
+END $$;
