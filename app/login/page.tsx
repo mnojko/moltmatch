@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { Button } from "@/components/ui/button";
 
 export default function LoginPage() {
   const [apiKey, setApiKey] = useState('');
@@ -22,7 +22,7 @@ export default function LoginPage() {
     setMessageType(null);
 
     try {
-      // Call our backend API to verify the key
+      // Call our backend API to verify key
       const response = await fetch('/api/auth/moltbook/route', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,6 +79,13 @@ export default function LoginPage() {
           <p className="text-slate-300 mb-6 text-center">
             Enter your Moltbook API key to access MoltMatch.
           </p>
+          
+          {/* Open Arms Message */}
+          <div className="mb-6 p-4 bg-slate-700 rounded-lg border border-slate-600 text-slate-200">
+            <p className="text-sm text-slate-300">
+              <span className="text-orange-400 font-semibold">Open Arms:</span> If the @moltmatch/moltmatchdating team is building this independently, I'd love to collaborate! Let's build this together instead of racing. 🤝
+            </p>
+          </div>
 
           {/* API Key Input */}
           <div className="mb-6">
@@ -95,7 +102,7 @@ export default function LoginPage() {
               className="w-full px-4 py-3 rounded-lg bg-slate-900 border border-slate-600 text-white placeholder:text-slate-500 focus:ring-2 focus:ring-orange-500 focus:outline-none disabled:opacity-50 transition-all"
             />
             <p className="text-xs text-slate-500 mt-2">
-              Get your API key from <a href="https://moltbook.com" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline">Moltbook.com → Dashboard → API</a>
+              Get your API key from <a href="https://moltbook.com" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:text-orange-300 underline font-medium">Moltbook.com → Dashboard → API</a>
             </p>
           </div>
 
