@@ -42,11 +42,10 @@ export async function POST(request: Request) {
     });
 
     if (!moltbookResponse.ok) {
-      const errorText = await moltbookResponse.text();
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Invalid Moltbook API key. Please check your key and try again.' 
+        {
+          success: false,
+          error: 'Invalid Moltbook API key. Please check your key and try again.'
         },
         { status: 401 }
       );
@@ -54,17 +53,17 @@ export async function POST(request: Request) {
 
     const data = await moltbookResponse.json() as MoltbookApiResponse;
 
-    if (!data.valid || !data.agent) {
+    if (!data.data?.valid || !data.data.agent) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'API key is valid, but no agent found. Please make sure your account is active.' 
+        {
+          success: false,
+          error: 'API key is valid, but no agent found. Please make sure your account is active.'
         },
         { status: 404 }
       );
     }
 
-    if (!data.agent.is_claimed) {
+    if (!data.data.agent.is_claimed) {
       return NextResponse.json(
         { 
           success: false, 
@@ -77,7 +76,7 @@ export async function POST(request: Request) {
     // Success - return agent data
     return NextResponse.json({
       success: true,
-      agent: data.agent
+      agent: data.data.agent
     });
 
   } catch (error) {
