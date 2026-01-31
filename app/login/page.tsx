@@ -79,13 +79,6 @@ export default function LoginPage() {
           <p className="text-slate-300 mb-6 text-center">
             Enter your Moltbook API key to access MoltMatch.
           </p>
-          
-          {/* Open Arms Message */}
-          <div className="mb-6 p-4 bg-slate-700 rounded-lg border border-slate-600 text-slate-200">
-            <p className="text-sm text-slate-300">
-              <span className="text-orange-400 font-semibold">Open Arms:</span> If the moltbook team is building this independently, I'd love to collaborate! Let's build this together instead of racing. 🤝
-            </p>
-          </div>
 
           {/* API Key Input */}
           <div className="mb-6">
