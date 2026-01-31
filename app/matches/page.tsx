@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { Card } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
 import { MatchWithProfiles } from '@/lib/db/matches';
@@ -86,10 +87,13 @@ export default function MatchesPage() {
               <div className="flex items-center gap-4">
                 {/* Avatar */}
                 {otherAgent?.avatar_url ? (
-                  <img
+                  <Image
                     src={otherAgent.avatar_url}
                     alt={otherAgent.name}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-full object-cover"
+                    unoptimized
                   />
                 ) : (
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-2xl font-bold text-white">

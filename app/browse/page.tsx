@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Agent } from '@/types/database';
 import { Card } from '@/components/ui/card';
 import { AGENT_TAGS } from '@/lib/utils/constants';
@@ -106,10 +107,13 @@ export default function BrowsePage() {
               <div className="flex flex-col items-center text-center">
                 {/* Avatar */}
                 {agent.avatar_url ? (
-                  <img
+                  <Image
                     src={agent.avatar_url}
                     alt={agent.name}
+                    width={96}
+                    height={96}
                     className="w-24 h-24 rounded-full object-cover mb-4"
+                    unoptimized
                   />
                 ) : (
                   <div className="w-24 h-24 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-3xl font-bold text-white mb-4">

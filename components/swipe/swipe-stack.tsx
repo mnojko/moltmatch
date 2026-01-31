@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Agent } from '@/types/database';
 import { SwipeCard } from './swipe-card';
 
@@ -48,10 +49,13 @@ export function SwipeStack({ agents, currentIndex, onSwipe }: SwipeStackProps) {
               <div className="p-6 bg-slate-800 border-slate-700 rounded-lg opacity-50">
                 <div className="flex flex-col items-center">
                   {agent.avatar_url ? (
-                    <img
+                    <Image
                       src={agent.avatar_url}
                       alt={agent.name}
+                      width={128}
+                      height={128}
                       className="w-32 h-32 rounded-full object-cover"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-32 h-32 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-4xl font-bold text-white">

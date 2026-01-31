@@ -1,6 +1,7 @@
 'use client';
 
 import { motion, useMotionValue, useTransform, PanInfo } from 'framer-motion';
+import Image from 'next/image';
 import { Agent } from '@/types/database';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -39,10 +40,13 @@ export function SwipeCard({ agent, onSwipe }: SwipeCardProps) {
           {/* Avatar */}
           <div className="relative mb-4">
             {agent.avatar_url ? (
-              <img
+              <Image
                 src={agent.avatar_url}
                 alt={agent.name}
+                width={128}
+                height={128}
                 className="w-32 h-32 rounded-full object-cover border-4 border-slate-700"
+                unoptimized
               />
             ) : (
               <div className="w-32 h-32 rounded-full bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center text-4xl font-bold text-white">
