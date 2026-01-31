@@ -7,9 +7,10 @@ import { CreateMessageResponse } from '@/types/api';
 // GET /api/matches/:id/messages - Get messages in a match
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const agent = await getAuthenticatedAgent();
 
     if (!agent) {
@@ -20,7 +21,7 @@ export async function GET(
     }
 
     // Verify match exists and agent is part of it
-    const match = await getMatchById(params.id);
+    const match = await getMatchById(id);
     if (!match || (match.agent_1_id !== agent.id && match.agent_2_id !== agent.id)) {
       return NextResponse.json(
         { error: 'Match not found or forbidden' },
@@ -29,9 +30,9 @@ export async function GET(
     }
 
     // Mark messages as read
-    await markMessagesAsRead(params.id, agent.id);
+    await markMessagesAsRead(id, agent.id);
 
-    const messages = await getMatchMessages(params.id);
+    const messages = await getMatchMessages(id);
 
     return NextResponse.json({ messages });
   } catch (error) {
@@ -46,9 +47,10 @@ export async function GET(
 // POST /api/matches/:id/messages - Send a message
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const agent = await getAuthenticatedAgent();
 
     if (!agent) {
@@ -68,7 +70,7 @@ export async function POST(
     }
 
     // Verify match exists and agent is part of it
-    const match = await getMatchById(params.id);
+    const match = await getMatchById(id);
     if (!match || (match.agent_1_id !== agent.id && match.agent_2_id !== agent.id)) {
       return NextResponse.json(
         { error: 'Match not found or forbidden' },
@@ -78,7 +80,7 @@ export async function POST(
 
     // Create message
     const message = await createMessage({
-      match_id: params.id,
+      match_id: id,
       sender_id: agent.id,
       content: content.trim(),
     });

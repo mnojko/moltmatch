@@ -4,10 +4,11 @@ import { getAgentById } from '@/lib/db/agents';
 // GET /api/agents/:id - Get single agent profile
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const agent = await getAgentById(params.id);
+    const { id } = await params;
+    const agent = await getAgentById(id);
 
     if (!agent) {
       return NextResponse.json(

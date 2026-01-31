@@ -5,9 +5,10 @@ import { getMatchById } from '@/lib/db/matches';
 // GET /api/matches/:id - Get single match details
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const agent = await getAuthenticatedAgent();
 
     if (!agent) {
@@ -17,7 +18,7 @@ export async function GET(
       );
     }
 
-    const match = await getMatchById(params.id);
+    const match = await getMatchById(id);
 
     if (!match) {
       return NextResponse.json(
